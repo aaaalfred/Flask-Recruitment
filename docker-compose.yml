@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: rh_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: recruitment_system
+      MYSQL_USER: rh_user
+      MYSQL_PASSWORD: rh_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - rh_network
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: rh_app
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: rh_user
+      MYSQL_PASSWORD: rh_password
+      MYSQL_DB: recruitment_system
+      SECRET_KEY: your-production-secret-key-here
+      JWT_SECRET_KEY: your-jwt-secret-key-here
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    volumes:
+      - .:/app
+    networks:
+      - rh_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  rh_network:
+    driver: bridge
