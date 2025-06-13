@@ -1,16 +1,6 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_jwt_extended import JWTManager
-from flask_cors import CORS
-from flask_migrate import Migrate
+from extensions import db, login_manager, jwt, migrate, cors
 from config import Config
-
-# Initialize extensions
-db = SQLAlchemy()
-login_manager = LoginManager()
-jwt = JWTManager()
-migrate = Migrate()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -21,11 +11,14 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
-    CORS(app)
+    cors.init_app(app)
     
     # Configure login manager
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Por favor inicia sesión para acceder a esta página.'
+    
+    # Import models for migrations
+    from models import Usuario, Vacante, Candidato, Documento, Entrevista, CandidatosPositions
     
     # Register blueprints
     from routes.auth_routes import auth_bp
@@ -49,5 +42,7 @@ def create_app(config_class=Config):
 if __name__ == '__main__':
     app = create_app()
     with app.app_context():
+        # Import models
+        from models import Usuario, Vacante, Candidato, Documento, Entrevista, CandidatosPositions
         db.create_all()
     app.run(debug=True)

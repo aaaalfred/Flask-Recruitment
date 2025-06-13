@@ -1,4 +1,4 @@
-from app import db
+from extensions import db
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,8 +16,8 @@ class CandidatosPositions(db.Model):
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    candidato = db.relationship('Candidato', backref='posiciones_rel')
-    vacante = db.relationship('Vacante', backref='candidatos_rel')
+    candidato = db.relationship('Candidato', backref='posiciones_rel', overlaps="candidato,candidatos_posiciones")
+    vacante = db.relationship('Vacante', backref='candidatos_rel', overlaps="vacante,candidatos_posiciones")
 
 class Usuario(UserMixin, db.Model):
     __tablename__ = 'usuario'
@@ -65,8 +65,8 @@ class Vacante(db.Model):
     vacantes = db.Column(db.Integer, default=1)
     estado = db.Column(db.Enum('abierta', 'pausada', 'cerrada', 'cancelada'), default='abierta')
     prioridad = db.Column(db.Enum('baja', 'media', 'alta', 'critica'), default='media')
-    salario_min = db.Column(db.Decimal(10, 2))
-    salario_max = db.Column(db.Decimal(10, 2))
+    salario_min = db.Column(db.Numeric(10, 2))
+    salario_max = db.Column(db.Numeric(10, 2))
     ubicacion = db.Column(db.String(100))
     modalidad = db.Column(db.Enum('presencial', 'remoto', 'hibrido'))
     fecha_limite = db.Column(db.DateTime)
@@ -76,7 +76,7 @@ class Vacante(db.Model):
     
     # Relationships
     entrevistas = db.relationship('Entrevista', backref='vacante_rel', cascade='all, delete-orphan')
-    candidatos_posiciones = db.relationship('CandidatosPositions', backref='vacante_rel', cascade='all, delete-orphan')
+    candidatos_posiciones = db.relationship('CandidatosPositions', backref='vacante_rel', cascade='all, delete-orphan', overlaps="candidatos_rel,vacante")
     
     def to_dict(self):
         return {
@@ -114,7 +114,7 @@ class Candidato(db.Model):
     comentarios_finales = db.Column(db.Text)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     reclutador_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
-    salario_esperado = db.Column(db.Decimal(10, 2))
+    salario_esperado = db.Column(db.Numeric(10, 2))
     experiencia_anos = db.Column(db.Integer)
     ubicacion = db.Column(db.String(100))
     disponibilidad = db.Column(db.Enum('inmediata', '15_dias', '30_dias', 'a_convenir'))
@@ -124,7 +124,7 @@ class Candidato(db.Model):
     # Relationships
     documentos = db.relationship('Documento', backref='candidato_rel', cascade='all, delete-orphan')
     entrevistas = db.relationship('Entrevista', backref='candidato_rel', cascade='all, delete-orphan')
-    candidatos_posiciones = db.relationship('CandidatosPositions', backref='candidato_rel', cascade='all, delete-orphan')
+    candidatos_posiciones = db.relationship('CandidatosPositions', backref='candidato_rel', cascade='all, delete-orphan', overlaps="candidato,posiciones_rel")
     
     def to_dict(self):
         return {

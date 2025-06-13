@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services.auth_service import authenticate_user
-from models import Usuario, db
+from extensions import db
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -31,6 +31,7 @@ def login():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     try:
+        from models import Usuario
         data = request.get_json()
         
         # Validar datos requeridos

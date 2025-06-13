@@ -1,15 +1,16 @@
 from functools import wraps
 from flask import jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
-from models import Usuario
+from extensions import db
 
 def token_required(f):
     @wraps(f)
     @jwt_required()
     def decorated(*args, **kwargs):
         try:
+            from models import Usuario
             current_user_id = get_jwt_identity()
-            current_user = Usuario.query.get(current_user_id)
+            current_user = Usuario.query.get(int(current_user_id))  # Convertir de vuelta a int
             if not current_user or not current_user.activo:
                 return jsonify({'message': 'Token inválido o usuario inactivo'}), 401
             return f(current_user, *args, **kwargs)
@@ -31,9 +32,10 @@ def role_required(*allowed_roles):
 def authenticate_user(email, password):
     """Autentica un usuario y retorna un token JWT"""
     try:
+        from models import Usuario
         user = Usuario.query.filter_by(email=email, activo=True).first()
         if user and user.check_password(password):
-            access_token = create_access_token(identity=user.id)
+            access_token = create_access_token(identity=str(user.id))  # Convertir a string
             return {
                 'success': True,
                 'access_token': access_token,
