@@ -1,12 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -23,6 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # PyInstaller
 *.manifest
@@ -35,6 +32,7 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
@@ -69,6 +67,10 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# IPython
+profile_default/
+ipython_config.py
+
 # pyenv
 .python-version
 
@@ -80,6 +82,10 @@ celerybeat-schedule
 
 # Environments
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .venv
 env/
 venv/
@@ -102,6 +108,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Pyre type checker
+.pyre/
+
 # IDE
 .vscode/
 .idea/
@@ -118,16 +127,18 @@ dmypy.json
 ehthumbs.db
 Thumbs.db
 
-# Flask migrations
-migrations/
-
 # Database
 *.db
-*.sqlite
+*.sqlite3
+*.sql
 
 # Logs
-*.log
 logs/
+*.log
 
-# Uploaded files
+# Flask-Migrate
+migrations/versions/
+
+# Custom
 uploads/
+temp/

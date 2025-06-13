@@ -28,6 +28,7 @@ def create_app(config_class=Config):
     from routes.documento_routes import documento_bp
     from routes.entrevista_routes import entrevista_bp
     from routes.candidatos_posiciones_routes import candidatos_posiciones_bp
+    from routes.reports_routes import reports_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(usuario_bp, url_prefix='/api/usuarios')
@@ -36,6 +37,7 @@ def create_app(config_class=Config):
     app.register_blueprint(documento_bp, url_prefix='/api/documentos')
     app.register_blueprint(entrevista_bp, url_prefix='/api/entrevistas')
     app.register_blueprint(candidatos_posiciones_bp, url_prefix='/api/candidatos-posiciones')
+    app.register_blueprint(reports_bp, url_prefix='/api/reports')
     
     return app
 
