@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
 import { useAuth } from '../hooks/useAuth';
@@ -16,8 +16,7 @@ import {
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath, isCollapsed, setIsCollapsed }) => {
   const { user } = useAuth();
 
   const navigation = [
@@ -54,10 +53,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
         {/* Botón de colapsar - solo en desktop */}
         {!sidebarOpen && (
           <button
-            onClick={() => setIsCollapsed(!collapsed)}
+            onClick={() => setIsCollapsed(!isCollapsed)}
             className="lg:flex hidden p-1 rounded-md text-white hover:bg-primary-700 transition-colors"
           >
-            {collapsed ? (
+            {isCollapsed ? (
               <ChevronRightIcon className="h-5 w-5" />
             ) : (
               <ChevronLeftIcon className="h-5 w-5" />

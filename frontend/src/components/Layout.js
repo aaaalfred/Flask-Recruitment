@@ -5,6 +5,7 @@ import Header from './Header';
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
 
   return (
@@ -14,18 +15,22 @@ const Layout = ({ children }) => {
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
         currentPath={location.pathname}
+        isCollapsed={sidebarCollapsed}
+        setIsCollapsed={setSidebarCollapsed}
       />
       
-      {/* Contenido principal - Ahora se ajusta automáticamente al sidebar */}
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+      {/* Contenido principal - Se ajusta dinámicamente al sidebar */}
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-72'
+      }`}>
         {/* Header */}
         <Header 
           setSidebarOpen={setSidebarOpen}
           currentPath={location.pathname}
         />
         
-        {/* Contenido con padding responsivo */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+        {/* Contenido con clases específicas para evitar superposición */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 main-content">
           <div className="p-4 lg:p-6">
             <div className="max-w-full">
               {children}

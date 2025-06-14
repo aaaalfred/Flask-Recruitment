@@ -5,6 +5,13 @@
   transition: width 0.3s ease-in-out;
 }
 
+/* Layout principal con transición suave */
+.main-content {
+  transition: margin-left 0.3s ease-in-out;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
 /* Mejora de tooltips para el sidebar colapsado */
 .sidebar-tooltip {
   position: absolute;
@@ -40,12 +47,6 @@
   visibility: visible;
 }
 
-/* Scrollbar personalizada para el contenido principal */
-.main-content {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e0 #f7fafc;
-}
-
 .main-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -61,6 +62,17 @@
 
 .main-content::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
+}
+
+/* Asegurar que el contenido no se superponga */
+@media (min-width: 1024px) {
+  .sidebar-collapsed .main-content {
+    margin-left: 4rem; /* 64px */
+  }
+  
+  .sidebar-expanded .main-content {
+    margin-left: 18rem; /* 288px */
+  }
 }
 
 /* Mejoras para pantallas pequeñas */
