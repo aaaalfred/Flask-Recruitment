@@ -1,0 +1,174 @@
+/* Users Management Styles */
+
+/* Animaciones para los elementos de usuario */
+.user-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.user-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Estados de rol con colores específicos */
+.role-ejecutivo {
+  @apply bg-purple-100 text-purple-800 border-purple-200;
+}
+
+.role-reclutador {
+  @apply bg-blue-100 text-blue-800 border-blue-200;
+}
+
+.role-reclutador_lider {
+  @apply bg-green-100 text-green-800 border-green-200;
+}
+
+/* Badge de estado activo/inactivo */
+.status-badge-active {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800;
+}
+
+.status-badge-inactive {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800;
+}
+
+/* Modal overlay mejorado */
+.modal-overlay {
+  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Formulario del modal */
+.modal-form {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Input con icono */
+.input-with-icon {
+  @apply pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500;
+}
+
+/* Botones de acción */
+.action-button-primary {
+  @apply inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200;
+}
+
+.action-button-secondary {
+  @apply inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200;
+}
+
+.action-button-danger {
+  @apply inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200;
+}
+
+/* Lista de usuarios mejorada */
+.user-list-item {
+  @apply px-6 py-4 hover:bg-gray-50 transition-colors duration-150;
+}
+
+/* Avatar placeholder mejorado */
+.user-avatar {
+  @apply h-10 w-10 text-gray-400 hover:text-gray-600 transition-colors duration-200;
+}
+
+/* Tooltip personalizado */
+.tooltip {
+  @apply absolute z-10 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 pointer-events-none transition-opacity duration-200;
+}
+
+.tooltip-visible {
+  @apply opacity-100;
+}
+
+/* Filtros responsivos */
+.filters-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+/* Paginación mejorada */
+.pagination-button {
+  @apply relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md transition-colors duration-200;
+}
+
+.pagination-button:not(:disabled) {
+  @apply border-gray-300 text-gray-700 bg-white hover:bg-gray-50;
+}
+
+.pagination-button:disabled {
+  @apply border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed;
+}
+
+/* Estados de carga */
+.loading-spinner {
+  @apply animate-spin rounded-full border-b-2 border-blue-600;
+}
+
+/* Responsive mejoras */
+@media (max-width: 640px) {
+  .user-list-item {
+    @apply px-4 py-3;
+  }
+  
+  .filters-grid {
+    @apply grid-cols-1 gap-3;
+  }
+  
+  .action-button-primary,
+  .action-button-secondary,
+  .action-button-danger {
+    @apply px-2 py-1 text-xs;
+  }
+}
+
+/* Efectos hover para iconos */
+.icon-hover {
+  @apply transition-colors duration-200 hover:text-blue-600;
+}
+
+/* Campo de búsqueda mejorado */
+.search-input {
+  @apply block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
+}
+
+/* Estadísticas rápidas */
+.stats-text {
+  @apply text-sm text-gray-600;
+}
+
+.stats-number {
+  @apply font-semibold text-gray-900;
+}
+
+.stats-highlight {
+  @apply font-semibold text-green-600;
+}
+
+/* Password toggle button */
+.password-toggle {
+  @apply absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200;
+}
+
+/* Form validation styles */
+.form-input-error {
+  @apply border-red-300 focus:ring-red-500 focus:border-red-500;
+}
+
+.form-error-message {
+  @apply mt-1 text-xs text-red-600;
+}
+
+/* Success states */
+.form-success {
+  @apply border-green-300 focus:ring-green-500 focus:border-green-500;
+}

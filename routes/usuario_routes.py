@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services.auth_service import token_required, role_required
 from extensions import db
+from models import Usuario
 
 usuario_bp = Blueprint('usuario', __name__)
 
@@ -8,7 +9,6 @@ usuario_bp = Blueprint('usuario', __name__)
 @token_required
 def get_usuarios(current_user):
     try:
-        from models import Usuario
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         
