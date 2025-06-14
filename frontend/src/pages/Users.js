@@ -51,7 +51,7 @@ const Users = () => {
   const fetchUsuarios = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`http://localhost:5000/api/usuarios?page=${currentPage}&per_page=10`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -121,46 +121,106 @@ const Users = () => {
   };
 
   // Guardar usuario (crear o editar)
-  const handleSave = async (e) => {
-    e.preventDefault();
+// Reemplazar la función handleSave en Users.js con esta versión con debugging
+
+const handleSave = async (e) => {
+  e.preventDefault();
+  
+  console.log('🔧 DEBUG: Iniciando creación de usuario');
+  console.log('FormData completo:', JSON.stringify(formData, null, 2));
+  console.log('EditingUser:', editingUser);
+  
+  try {
+    const token = localStorage.getItem('authToken');
+    console.log('🔑 Token info:');
+    console.log('  Token exists:', !!token);
+    console.log('  Token length:', token ? token.length : 0);
+    console.log('  Token preview:', token ? `${token.substring(0, 50)}...` : 'NO TOKEN');
     
-    try {
-      const token = localStorage.getItem('token');
-      const url = editingUser 
-        ? `http://localhost:5000/api/usuarios/${editingUser.id}`
-        : 'http://localhost:5000/api/usuarios';
-      
-      const method = editingUser ? 'PUT' : 'POST';
-      
-      // Para edición, no enviamos password si está vacío
-      const dataToSend = { ...formData };
-      if (editingUser && !formData.password) {
-        delete dataToSend.password;
-      }
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSend)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        toast.success(editingUser ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
-        resetForm();
-        fetchUsuarios();
-      } else {
-        const error = await response.json();
-        toast.error(error.message || 'Error al guardar usuario');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Error de conexión');
+    const url = editingUser 
+      ? `http://localhost:5000/api/usuarios/${editingUser.id}`
+      : 'http://localhost:5000/api/usuarios';
+    
+    const method = editingUser ? 'PUT' : 'POST';
+    
+    // Para edición, no enviamos password si está vacío
+    const dataToSend = { ...formData };
+    if (editingUser && !formData.password) {
+      delete dataToSend.password;
     }
-  };
+
+    console.log('🌐 Request details:');
+    console.log('  URL:', url);
+    console.log('  Method:', method);
+    console.log('  Data to send:', JSON.stringify(dataToSend, null, 2));
+    
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+    console.log('  Headers:', {
+      'Authorization': `Bearer ${token ? token.substring(0, 30) + '...' : 'NO TOKEN'}`,
+      'Content-Type': 'application/json'
+    });
+
+    console.log('📡 Enviando request...');
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: JSON.stringify(dataToSend)
+    });
+
+    console.log('📡 Response recibida:');
+    console.log('  Status:', response.status);
+    console.log('  StatusText:', response.statusText);
+    console.log('  OK:', response.ok);
+    console.log('  Headers:', Object.fromEntries(response.headers.entries()));
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Success response:', JSON.stringify(result, null, 2));
+      toast.success(editingUser ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
+      resetForm();
+      fetchUsuarios();
+    } else {
+      console.log('❌ Error response detectado');
+      console.log('❌ Status:', response.status);
+      console.log('❌ StatusText:', response.statusText);
+      
+      // Intentar obtener el cuerpo de la respuesta
+      let errorMessage = `Error ${response.status}`;
+      try {
+        const errorData = await response.json();
+        console.log('❌ Error JSON:', JSON.stringify(errorData, null, 2));
+        errorMessage = errorData.message || errorMessage;
+      } catch (jsonError) {
+        console.log('❌ No es JSON válido, intentando texto...');
+        try {
+          const errorText = await response.text();
+          console.log('❌ Error Text:', errorText);
+          errorMessage = errorText || errorMessage;
+        } catch (textError) {
+          console.log('❌ No se pudo leer respuesta:', textError);
+        }
+      }
+      
+      console.log('❌ Error final a mostrar:', errorMessage);
+      toast.error(errorMessage);
+    }
+  } catch (error) {
+    console.error('❌ EXCEPCIÓN CAPTURADA:');
+    console.error('  Type:', error.constructor.name);
+    console.error('  Message:', error.message);
+    console.error('  Stack:', error.stack);
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      console.error('🔥 PROBLEMA DE RED: Backend probablemente no está corriendo');
+      toast.error('Error de conexión: ¿Está el backend corriendo?');
+    } else {
+      toast.error(`Error de conexión: ${error.message}`);
+    }
+  }
+};
 
   // Desactivar usuario
   const handleDeactivate = async (usuario) => {
@@ -169,7 +229,7 @@ const Users = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`http://localhost:5000/api/usuarios/${usuario.id}`, {
         method: 'DELETE',
         headers: {

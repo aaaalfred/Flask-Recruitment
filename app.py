@@ -62,14 +62,9 @@ def create_app(config_class=Config):
     def bad_request(error):
         return jsonify({'message': 'Petición inválida'}), 400
     
-    # CORS para todas las rutas como fallback
-    @app.after_request
-    def after_request(response):
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-        return response
+    # ❌ REMOVIDO: CORS duplicado que causaba el error
+    # ❌ El @app.after_request estaba duplicando los headers CORS
+    # ✅ Ahora solo usamos la configuración en extensions.py
     
     return app
 
@@ -82,4 +77,5 @@ if __name__ == '__main__':
         print("🚀 Servidor iniciado en http://localhost:5000")
         print("📋 API disponible en http://localhost:5000/api")
         print("💊 Health check en http://localhost:5000/api/health")
+        print("✅ CORS configurado correctamente (sin duplicados)")
     app.run(debug=True, host='0.0.0.0', port=5000)
