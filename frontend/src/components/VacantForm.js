@@ -12,17 +12,18 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
     handleSubmit,
     formState: { errors },
     reset,
-    setValue
+    setValue,
+    watch
   } = useForm({
     defaultValues: {
       nombre: '',
       descripcion: '',
       reclutador_id: '',
-      reclutador_lider_id: '',
+      reclutador_lider_id: '', // Se configurará automáticamente
       candidatos_requeridos: 3,
       entrevistas_op: 3,
       vacantes: 1,
-      avance: 'Creada',
+      avance: 'Creada', // Por defecto siempre "Creada"
       prioridad: 'media',
       envio_candidatos_rh: '',
       fecha_limite: '',
@@ -43,8 +44,25 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
           setValue(key, vacant[key]);
         }
       });
+    } else {
+      // Para nuevas vacantes, configurar valores por defecto
+      setValue('avance', 'Creada');
+      // Buscar y asignar Fernanda Moreno como reclutador líder
+      setFernandaAsLeader();
     }
-  }, [vacant, setValue]);
+  }, [vacant, setValue, users]);
+
+  const setFernandaAsLeader = () => {
+    // Buscar Fernanda Moreno en la lista de usuarios
+    const fernanda = users.find(user => 
+      user.nombre === 'Fernanda Moreno' && user.rol === 'reclutador_lider'
+    );
+    
+    if (fernanda) {
+      setValue('reclutador_lider_id', fernanda.id);
+      console.log('Fernanda Moreno asignada como reclutador líder:', fernanda.id);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -55,6 +73,63 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
       toast.error('Error cargando usuarios');
     }
   };
+
+  // Funciones de validación
+  const getTodayDateTime = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  };
+
+  const validateFutureDate = (value) => {
+    if (!value) return true; // Campo opcional
+    
+    const selectedDate = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Inicio del día actual
+    
+    if (selectedDate <= today) {
+      return 'La fecha debe ser posterior al día de hoy';
+    }
+    return true;
+  };
+
+  const validateFechaLimite = (value) => {
+    if (!value) return true; // Campo opcional
+    
+    // Primero validar que sea fecha futura
+    const futureValidation = validateFutureDate(value);
+    if (futureValidation !== true) {
+      return futureValidation;
+    }
+    
+    // Luego validar que sea posterior a la fecha de envío
+    const envioDate = watch('envio_candidatos_rh');
+    if (envioDate) {
+      const fechaEnvio = new Date(envioDate);
+      const fechaLimite = new Date(value);
+      
+      if (fechaLimite <= fechaEnvio) {
+        return 'La fecha límite debe ser posterior a la fecha de envío de candidatos';
+      }
+    }
+    
+    return true;
+  };
+
+  // Observar cambios en la fecha de envío para revalidar fecha límite
+  const envioDate = watch('envio_candidatos_rh');
+  
+  // Efecto para revalidar fecha límite cuando cambie la fecha de envío
+  useEffect(() => {
+    if (envioDate) {
+      // Trigger revalidation of fecha_limite
+      const currentFechaLimite = watch('fecha_limite');
+      if (currentFechaLimite) {
+        setValue('fecha_limite', currentFechaLimite, { shouldValidate: true });
+      }
+    }
+  }, [envioDate, setValue, watch]);
 
   const onSubmit = async (data) => {
     try {
@@ -190,18 +265,12 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Estado del Avance
             </label>
-            <select
-              {...register('avance')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Creada">Creada</option>
-              <option value="Buscando candidatos">Buscando candidatos</option>
-              <option value="Candidatos enviados a RH">Candidatos enviados a RH</option>
-              <option value="En proceso de entrevistas">En proceso de entrevistas</option>
-              <option value="Seleccionando candidatos">Seleccionando candidatos</option>
-              <option value="Posiciones cubiertas">Posiciones cubiertas</option>
-              <option value="Finalizada">Finalizada</option>
-            </select>
+            <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600">
+              🆕 Creada (Por defecto para nuevas vacantes)
+            </div>
+            <p className="text-xs text-gray-500 mt-1">El estado se actualizará automáticamente durante el proceso</p>
+            {/* Campo oculto para enviar el valor */}
+            <input type="hidden" {...register('avance')} value="Creada" />
           </div>
         </div>
 
@@ -236,17 +305,12 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Reclutador Líder
               </label>
-              <select
-                {...register('reclutador_lider_id')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Seleccionar líder...</option>
-                {reclutadoresLider.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.nombre}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-green-50 text-green-700">
+                👑 Fernanda Moreno (Asignada automáticamente)
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Reclutador líder por defecto del sistema</p>
+              {/* Campo oculto para enviar el valor */}
+              <input type="hidden" {...register('reclutador_lider_id')} />
             </div>
           </div>
         </div>
@@ -279,10 +343,16 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
               </label>
               <input
                 type="datetime-local"
-                {...register('envio_candidatos_rh')}
+                {...register('envio_candidatos_rh', {
+                  validate: validateFutureDate
+                })}
+                min={getTodayDateTime()}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Fecha cuando se envían candidatos</p>
+              <p className="text-xs text-gray-500 mt-1">Fecha cuando se envían candidatos (debe ser futura)</p>
+              {errors.envio_candidatos_rh && (
+                <p className="text-red-500 text-sm mt-1">{errors.envio_candidatos_rh.message}</p>
+              )}
             </div>
 
             <div>
@@ -291,10 +361,21 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
               </label>
               <input
                 type="datetime-local"
-                {...register('fecha_limite')}
+                {...register('fecha_limite', {
+                  validate: validateFechaLimite
+                })}
+                min={envioDate || getTodayDateTime()}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Fecha límite del proceso</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {envioDate 
+                  ? 'Debe ser posterior a la fecha de envío de candidatos' 
+                  : 'Fecha límite del proceso (debe ser futura)'
+                }
+              </p>
+              {errors.fecha_limite && (
+                <p className="text-red-500 text-sm mt-1">{errors.fecha_limite.message}</p>
+              )}
             </div>
           </div>
 

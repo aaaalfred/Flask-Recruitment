@@ -16,18 +16,20 @@ const Layout = ({ children }) => {
         currentPath={location.pathname}
       />
       
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Contenido principal - Ahora se ajusta automáticamente al sidebar */}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/* Header */}
         <Header 
           setSidebarOpen={setSidebarOpen}
           currentPath={location.pathname}
         />
         
-        {/* Contenido */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto">
-            {children}
+        {/* Contenido con padding responsivo */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+          <div className="p-4 lg:p-6">
+            <div className="max-w-full">
+              {children}
+            </div>
           </div>
         </main>
       </div>

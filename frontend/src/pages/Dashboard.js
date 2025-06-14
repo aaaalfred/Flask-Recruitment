@@ -71,58 +71,58 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+      {/* Métricas principales - Responsive Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+            <div className="p-2 lg:p-3 rounded-full bg-blue-100 text-blue-600 text-lg lg:text-xl">
               🎯
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Vacantes</p>
-              <p className="text-2xl font-semibold text-gray-900">
+            <div className="ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-500 truncate">Total Vacantes</p>
+              <p className="text-lg lg:text-2xl font-semibold text-gray-900">
                 {stats?.total_vacantes || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-600">
+            <div className="p-2 lg:p-3 rounded-full bg-green-100 text-green-600 text-lg lg:text-xl">
               ✅
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Vacantes Abiertas</p>
-              <p className="text-2xl font-semibold text-gray-900">
+            <div className="ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-500 truncate">Vacantes Abiertas</p>
+              <p className="text-lg lg:text-2xl font-semibold text-gray-900">
                 {stats?.vacantes_abiertas || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+            <div className="p-2 lg:p-3 rounded-full bg-purple-100 text-purple-600 text-lg lg:text-xl">
               👥
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Candidatos</p>
-              <p className="text-2xl font-semibold text-gray-900">
+            <div className="ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-500 truncate">Total Candidatos</p>
+              <p className="text-lg lg:text-2xl font-semibold text-gray-900">
                 {stats?.total_candidatos || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
           <div className="flex items-center">
-            <div className="p-3 rounded-full bg-orange-100 text-orange-600">
+            <div className="p-2 lg:p-3 rounded-full bg-orange-100 text-orange-600 text-lg lg:text-xl">
               ⭐
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Seleccionados</p>
-              <p className="text-2xl font-semibold text-gray-900">
+            <div className="ml-3 lg:ml-4 min-w-0 flex-1">
+              <p className="text-xs lg:text-sm font-medium text-gray-500 truncate">Seleccionados</p>
+              <p className="text-lg lg:text-2xl font-semibold text-gray-900">
                 {stats?.candidatos_seleccionados || 0}
               </p>
             </div>
@@ -130,8 +130,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Estado de avance y vacantes antiguas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Estado de avance y vacantes antiguas - Responsive */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         
         {/* Estado por avance */}
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -185,109 +185,111 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Estadísticas por reclutador */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      {/* Estadísticas por reclutador - Tabla Responsive */}
+      <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           👤 Rendimiento por Reclutador
         </h2>
         
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reclutador
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vacantes
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Candidatos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Seleccionados
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Efectividad
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {stats?.por_reclutador && Object.entries(stats.por_reclutador).map(([reclutador, data]) => {
-                const efectividad = data.candidatos > 0 ? ((data.seleccionados / data.candidatos) * 100).toFixed(1) : 0;
-                
-                return (
-                  <tr key={reclutador}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{reclutador}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {data.vacantes}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {data.candidatos}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {data.seleccionados}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        efectividad >= 50 ? 'bg-green-100 text-green-800' :
-                        efectividad >= 25 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {efectividad}%
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="overflow-x-auto -mx-4 lg:mx-0">
+          <div className="inline-block min-w-full align-middle">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Reclutador
+                  </th>
+                  <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Vacantes
+                  </th>
+                  <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Candidatos
+                  </th>
+                  <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Seleccionados
+                  </th>
+                  <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Efectividad
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats?.por_reclutador && Object.entries(stats.por_reclutador).map(([reclutador, data]) => {
+                  const efectividad = data.candidatos > 0 ? ((data.seleccionados / data.candidatos) * 100).toFixed(1) : 0;
+                  
+                  return (
+                    <tr key={reclutador}>
+                      <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900 text-sm">{reclutador}</div>
+                      </td>
+                      <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {data.vacantes}
+                      </td>
+                      <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {data.candidatos}
+                      </td>
+                      <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {data.seleccionados}
+                      </td>
+                      <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          efectividad >= 50 ? 'bg-green-100 text-green-800' :
+                          efectividad >= 25 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {efectividad}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      {/* Métricas adicionales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+      {/* Métricas adicionales - Responsive Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+        <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Vacantes Cerradas</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-xl lg:text-2xl font-semibold text-gray-900">
                 {stats?.vacantes_cerradas || 0}
               </p>
             </div>
-            <div className="p-3 rounded-full bg-gray-100 text-gray-600">
+            <div className="p-2 lg:p-3 rounded-full bg-gray-100 text-gray-600 text-lg lg:text-xl">
               🔒
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Propuestas Totales</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-xl lg:text-2xl font-semibold text-gray-900">
                 {stats?.propuestas_totales || 0}
               </p>
             </div>
-            <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
+            <div className="p-2 lg:p-3 rounded-full bg-yellow-100 text-yellow-600 text-lg lg:text-xl">
               📄
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Tasa de Conversión</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-xl lg:text-2xl font-semibold text-gray-900">
                 {stats?.total_candidatos > 0 
                   ? ((stats.candidatos_seleccionados / stats.total_candidatos) * 100).toFixed(1)
                   : 0}%
               </p>
             </div>
-            <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+            <div className="p-2 lg:p-3 rounded-full bg-indigo-100 text-indigo-600 text-lg lg:text-xl">
               📊
             </div>
           </div>

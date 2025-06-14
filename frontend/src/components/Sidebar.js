@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
 import { useAuth } from '../hooks/useAuth';
@@ -10,10 +10,14 @@ import {
   CalendarDaysIcon,
   UsersIcon,
   ChartBarIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  Bars3Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { user } = useAuth();
 
   const navigation = [
@@ -33,45 +37,85 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
     return currentPath.startsWith(href);
   };
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ collapsed = false }) => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center justify-center h-16 px-4 bg-primary-600">
+      <div className={`flex items-center h-16 px-4 bg-primary-600 transition-all duration-300 ${
+        collapsed ? 'justify-center' : 'justify-between'
+      }`}>
         <div className="flex items-center space-x-2">
-          <BuildingOfficeIcon className="h-8 w-8 text-white" />
-          <span className="text-white text-xl font-bold">Sistema RH</span>
+          <BuildingOfficeIcon className="h-8 w-8 text-white flex-shrink-0" />
+          {!collapsed && (
+            <span className="text-white text-xl font-bold whitespace-nowrap">
+              Sistema RH
+            </span>
+          )}
         </div>
+        {/* Botón de colapsar - solo en desktop */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setIsCollapsed(!collapsed)}
+            className="lg:flex hidden p-1 rounded-md text-white hover:bg-primary-700 transition-colors"
+          >
+            {collapsed ? (
+              <ChevronRightIcon className="h-5 w-5" />
+            ) : (
+              <ChevronLeftIcon className="h-5 w-5" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1 bg-white">
+      <nav className={`flex-1 py-6 space-y-1 bg-white transition-all duration-300 ${
+        collapsed ? 'px-2' : 'px-4'
+      }`}>
         {filteredNavigation.map((item) => {
           const Icon = item.icon;
           return (
-            <Link
-              key={item.name}
-              to={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={`${
-                isActive(item.href)
-                  ? 'bg-primary-50 border-r-4 border-primary-600 text-primary-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              } group flex items-center px-3 py-2 text-sm font-medium rounded-l-md transition-colors duration-200`}
-            >
-              <Icon
+            <div key={item.name} className="relative">
+              <Link
+                to={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={`${
-                  isActive(item.href) ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-500'
-                } mr-3 h-5 w-5 transition-colors duration-200`}
-              />
-              {item.name}
-            </Link>
+                  isActive(item.href)
+                    ? 'bg-primary-50 border-r-4 border-primary-600 text-primary-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                } group flex items-center py-2 text-sm font-medium rounded-l-md transition-all duration-200 ${
+                  collapsed ? 'px-2 justify-center' : 'px-3'
+                }`}
+                title={collapsed ? item.name : ''}
+              >
+                <Icon
+                  className={`${
+                    isActive(item.href) ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-500'
+                  } h-5 w-5 transition-colors duration-200 flex-shrink-0 ${
+                    collapsed ? '' : 'mr-3'
+                  }`}
+                />
+                {!collapsed && (
+                  <span className="whitespace-nowrap">{item.name}</span>
+                )}
+              </Link>
+              
+              {/* Tooltip para modo colapsado */}
+              {collapsed && (
+                <div className="sidebar-tooltip">
+                  {item.name}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
 
       {/* User info */}
-      <div className="p-4 bg-gray-50 border-t border-gray-200">
-        <div className="flex items-center">
+      <div className={`bg-gray-50 border-t border-gray-200 transition-all duration-300 ${
+        collapsed ? 'p-2' : 'p-4'
+      }`}>
+        <div className={`flex items-center ${
+          collapsed ? 'justify-center' : ''
+        }`}>
           <div className="flex-shrink-0">
             <div className="h-8 w-8 bg-primary-600 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-medium">
@@ -79,14 +123,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
               </span>
             </div>
           </div>
-          <div className="ml-3 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.nombre}
-            </p>
-            <p className="text-xs text-gray-500 capitalize">
-              {user?.rol?.replace('_', ' ')}
-            </p>
-          </div>
+          {!collapsed && (
+            <div className="ml-3 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.nombre}
+              </p>
+              <p className="text-xs text-gray-500 capitalize">
+                {user?.rol?.replace('_', ' ')}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -141,7 +187,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
                 </Transition.Child>
                 
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white shadow-xl">
-                  <SidebarContent />
+                  <SidebarContent collapsed={false} />
                 </div>
               </Dialog.Panel>
             </Transition.Child>
@@ -150,9 +196,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
       </Transition.Root>
 
       {/* Sidebar desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300 ${
+        isCollapsed ? 'lg:w-16' : 'lg:w-72'
+      }`}>
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white shadow-sm border-r border-gray-200">
-          <SidebarContent />
+          <SidebarContent collapsed={isCollapsed} />
         </div>
       </div>
     </>
