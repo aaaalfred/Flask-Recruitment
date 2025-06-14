@@ -7,21 +7,29 @@ import {
   EyeIcon,
   PencilIcon,
   TrashIcon,
-  BriefcaseIcon
+  BriefcaseIcon,
+  UserGroupIcon,
+  CalendarDaysIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import { vacantService } from '../services/api';
-import { formatDate, formatCurrency } from '../utils/helpers';
-import { LABELS, STATUS_COLORS, VACANT_STATES } from '../utils/constants';
+import { formatDate } from '../utils/helpers';
 import toast from 'react-hot-toast';
+import CandidateVacantManager from '../components/CandidateVacantManager';
+import VacantForm from '../components/VacantForm';
 
 const Vacants = () => {
   const [vacants, setVacants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showCandidateManager, setShowCandidateManager] = useState(false);
+  const [showVacantForm, setShowVacantForm] = useState(false);
+  const [selectedVacant, setSelectedVacant] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
-    estado: ''
+    estado: '',
+    avance: ''
   });
 
   useEffect(() => {
@@ -63,10 +71,74 @@ const Vacants = () => {
     }
   };
 
+  const handleManageCandidates = (vacant) => {
+    setSelectedVacant(vacant);
+    setShowCandidateManager(true);
+  };
+
+  const handleNewVacant = () => {
+    setSelectedVacant(null);
+    setShowVacantForm(true);
+  };
+
+  const handleEditVacant = (vacant) => {
+    setSelectedVacant(vacant);
+    setShowVacantForm(true);
+  };
+
+  const handleVacantSaved = () => {
+    setShowVacantForm(false);
+    setSelectedVacant(null);
+    fetchVacants();
+  };
+
+  const getAvanceColor = (avance) => {
+    switch (avance) {
+      case 'Creada':
+        return 'bg-gray-100 text-gray-800';
+      case 'Buscando candidatos':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Candidatos enviados a RH':
+        return 'bg-blue-100 text-blue-800';
+      case 'En proceso de entrevistas':
+        return 'bg-purple-100 text-purple-800';
+      case 'Seleccionando candidatos':
+        return 'bg-orange-100 text-orange-800';
+      case 'Posiciones cubiertas':
+        return 'bg-green-100 text-green-800';
+      case 'Finalizada':
+        return 'bg-green-200 text-green-900';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusFinalColor = (status) => {
+    switch (status) {
+      case 'abierta':
+        return 'bg-blue-100 text-blue-800';
+      case 'cubierta':
+        return 'bg-green-100 text-green-800';
+      case 'pausada':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelada':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityIcon = (dias) => {
+    if (dias > 100) return '🔴';
+    if (dias > 60) return '🟡';
+    if (dias > 30) return '🟠';
+    return '🟢';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="loading-spinner"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -76,26 +148,26 @@ const Vacants = () => {
       {/* Header */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Vacantes</h1>
+          <h1 className="text-2xl font-bold text-gray-900">📋 Gestión de Vacantes</h1>
           <p className="mt-2 text-sm text-gray-700">
-            Administra las posiciones abiertas y gestiona el proceso de reclutamiento
+            Administra las posiciones y gestiona el proceso completo de reclutamiento
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
-          <Link
-            to="/vacants/new"
-            className="btn-primary inline-flex items-center"
+          <button
+            onClick={handleNewVacant}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <PlusIcon className="h-5 w-5 mr-2" />
             Nueva Vacante
-          </Link>
+          </button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="card">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {/* Search */}
+      {/* Filtros */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          {/* Búsqueda */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -103,59 +175,78 @@ const Vacants = () => {
             <input
               type="text"
               placeholder="Buscar vacantes..."
-              className="input-field pl-10"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
             />
           </div>
 
-          {/* Estado Filter */}
+          {/* Estado */}
           <div className="relative">
             <select
-              className="input-field"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={filters.estado}
               onChange={(e) => handleFilterChange('estado', e.target.value)}
             >
               <option value="">Todos los estados</option>
-              {Object.entries(LABELS.VACANT_STATES).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
+              <option value="abierta">Abierta</option>
+              <option value="pausada">Pausada</option>
+              <option value="cerrada">Cerrada</option>
+              <option value="cancelada">Cancelada</option>
             </select>
           </div>
 
-          {/* Filter Button */}
+          {/* Avance */}
+          <div className="relative">
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={filters.avance}
+              onChange={(e) => handleFilterChange('avance', e.target.value)}
+            >
+              <option value="">Todos los avances</option>
+              <option value="Creada">Creada</option>
+              <option value="Buscando candidatos">Buscando candidatos</option>
+              <option value="Candidatos enviados a RH">Candidatos enviados a RH</option>
+              <option value="En proceso de entrevistas">En proceso de entrevistas</option>
+              <option value="Seleccionando candidatos">Seleccionando candidatos</option>
+              <option value="Posiciones cubiertas">Posiciones cubiertas</option>
+              <option value="Finalizada">Finalizada</option>
+            </select>
+          </div>
+
+          {/* Limpiar filtros */}
           <div className="flex justify-end">
-            <button className="btn-secondary inline-flex items-center">
+            <button 
+              onClick={() => setFilters({ search: '', estado: '', avance: '' })}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
               <FunnelIcon className="h-5 w-5 mr-2" />
-              Más Filtros
+              Limpiar
             </button>
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="card overflow-hidden">
+      {/* Tabla de vacantes */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vacante
+                  Vacante / Ubicación
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reclutador
+                  Avance del Proceso
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
+                  Candidatos
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Prioridad
+                  Tiempo / Prioridad
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Salario
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha
+                  Equipo
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -167,59 +258,86 @@ const Vacants = () => {
                 <tr key={vacant.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {vacant.nombre}
+                      <div className="text-sm font-medium text-gray-900 flex items-center">
+                        {getPriorityIcon(vacant.dias_transcurridos)} {vacant.nombre}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {vacant.ubicacion} • {LABELS.WORK_MODALITIES[vacant.modalidad]}
+                        📍 {vacant.ubicacion || 'Ubicación no especificada'}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {vacant.vacantes} {vacant.vacantes === 1 ? 'posición' : 'posiciones'} • 
+                        {vacant.candidatos_requeridos} candidatos requeridos
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{vacant.reclutador}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`badge ${STATUS_COLORS.VACANT_STATES[vacant.estado]}`}>
-                      {LABELS.VACANT_STATES[vacant.estado]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`badge ${STATUS_COLORS.VACANT_PRIORITIES[vacant.prioridad]}`}>
-                      {LABELS.VACANT_PRIORITIES[vacant.prioridad]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {vacant.salario_min && vacant.salario_max ? (
+                    <div className="space-y-1">
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getAvanceColor(vacant.avance)}`}>
+                        {vacant.avance || 'Sin avance'}
+                      </span>
                       <div>
-                        {formatCurrency(vacant.salario_min)} - {formatCurrency(vacant.salario_max)}
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusFinalColor(vacant.status_final)}`}>
+                          {vacant.status_final || 'abierta'}
+                        </span>
                       </div>
-                    ) : (
-                      'A negociar'
-                    )}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(vacant.fecha_creacion)}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      <div className="flex items-center space-x-1">
+                        <UserGroupIcon className="h-4 w-4 text-gray-400" />
+                        <span>{vacant.total_candidatos || 0} Total</span>
+                      </div>
+                      <div className="text-xs text-gray-500 space-y-1 mt-1">
+                        <div>✅ {vacant.candidatos_aceptados || 0} Aceptados</div>
+                        <div>🎯 {vacant.candidatos_contratados || 0} Contratados</div>
+                        <div>❌ {vacant.candidatos_rechazados || 0} Rechazados</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      <div className="flex items-center space-x-1">
+                        <ClockIcon className="h-4 w-4 text-gray-400" />
+                        <span>{vacant.dias_transcurridos || 0} días</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        <CalendarDaysIcon className="h-3 w-3 inline mr-1" />
+                        {formatDate(vacant.fecha_solicitud)}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <div>👤 <strong>Ejecutivo:</strong> {vacant.ejecutivo}</div>
+                        <div>🔍 <strong>Reclutador:</strong> {vacant.reclutador}</div>
+                        {vacant.reclutador_lider && (
+                          <div>👑 <strong>Líder:</strong> {vacant.reclutador_lider}</div>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
-                      <Link
-                        to={`/vacants/${vacant.id}`}
-                        className="text-primary-600 hover:text-primary-900 p-1 rounded"
-                        title="Ver detalles"
+                      <button
+                        onClick={() => handleManageCandidates(vacant)}
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                        title="Gestionar candidatos"
                       >
-                        <EyeIcon className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        to={`/vacants/${vacant.id}/edit`}
+                        <UserGroupIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEditVacant(vacant)}
                         className="text-yellow-600 hover:text-yellow-900 p-1 rounded"
-                        title="Editar"
+                        title="Editar vacante"
                       >
                         <PencilIcon className="h-4 w-4" />
-                      </Link>
+                      </button>
                       <button
                         onClick={() => handleDelete(vacant.id)}
                         className="text-red-600 hover:text-red-900 p-1 rounded"
-                        title="Cancelar"
+                        title="Cancelar vacante"
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>
@@ -231,7 +349,7 @@ const Vacants = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Paginación */}
         {totalPages > 1 && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
@@ -280,22 +398,50 @@ const Vacants = () => {
         )}
       </div>
 
-      {/* Empty State */}
+      {/* Estado vacío */}
       {!loading && vacants.length === 0 && (
         <div className="text-center py-12">
           <BriefcaseIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">No hay vacantes</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Comienza creando tu primera vacante.
+            Comienza creando tu primera vacante para el proceso de reclutamiento.
           </p>
           <div className="mt-6">
-            <Link
-              to="/vacants/new"
-              className="btn-primary inline-flex items-center"
+            <button
+              onClick={handleNewVacant}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
             >
               <PlusIcon className="h-5 w-5 mr-2" />
               Nueva Vacante
-            </Link>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de gestión de candidatos */}
+      {showCandidateManager && selectedVacant && (
+        <CandidateVacantManager
+          vacanteId={selectedVacant.id}
+          onClose={() => {
+            setShowCandidateManager(false);
+            setSelectedVacant(null);
+            fetchVacants(); // Refrescar datos
+          }}
+        />
+      )}
+
+      {/* Modal de formulario de vacante */}
+      {showVacantForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <VacantForm
+              vacant={selectedVacant}
+              onSave={handleVacantSaved}
+              onCancel={() => {
+                setShowVacantForm(false);
+                setSelectedVacant(null);
+              }}
+            />
           </div>
         </div>
       )}

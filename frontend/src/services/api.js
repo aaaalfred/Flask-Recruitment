@@ -3,11 +3,14 @@ import axios from 'axios';
 // Configuración base de Axios
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+console.log('🔗 API Base URL:', API_BASE_URL);
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 segundos timeout
 });
 
 // Interceptor para agregar token automáticamente
@@ -17,25 +20,61 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Log para debugging
+    console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`, {
+      headers: config.headers,
+      data: config.data
+    });
+    
     return config;
   },
   (error) => {
+    console.error('❌ Request error:', error);
     return Promise.reject(error);
   }
 );
 
 // Interceptor para manejar respuestas y errores
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`, response.data);
+    return response;
+  },
   (error) => {
+    console.error('❌ Response error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message,
+      data: error.response?.data
+    });
+    
     if (error.response?.status === 401) {
+      console.log('🔐 Token inválido, redirigiendo a login...');
       localStorage.removeItem('authToken');
       localStorage.removeItem('userInfo');
       window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );
+
+// Función para probar la conexión con el backend
+export const testConnection = async () => {
+  try {
+    const response = await api.get('/health');
+    console.log('💚 Conexión con backend exitosa:', response.data);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('💔 Error de conexión con backend:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message 
+    };
+  }
+};
 
 // Servicios de Autenticación
 export const authService = {
@@ -44,6 +83,15 @@ export const authService = {
   logout: () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userInfo');
+  },
+  // Nuevo: verificar si el token es válido
+  verifyToken: async () => {
+    try {
+      const response = await api.get('/auth/verify');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || error.message };
+    }
   }
 };
 
@@ -66,7 +114,13 @@ export const vacantService = {
   getVacant: (id) => api.get(`/vacantes/${id}`),
   createVacant: (vacantData) => api.post('/vacantes', vacantData),
   updateVacant: (id, vacantData) => api.put(`/vacantes/${id}`, vacantData),
-  deleteVacant: (id) => api.delete(`/vacantes/${id}`)
+  deleteVacant: (id) => api.delete(`/vacantes/${id}`),
+  
+  // Nuevos endpoints para el flujo real
+  sendCandidatesHR: (vacanteId, data) => api.post(`/vacantes/${vacanteId}/enviar-candidatos`, data),
+  scheduleInterview: (vacanteId, data) => api.post(`/vacantes/${vacanteId}/programar-entrevista`, data),
+  selectCandidate: (vacanteId, data) => api.post(`/vacantes/${vacanteId}/seleccionar-candidato`, data),
+  getDashboardStats: () => api.get('/vacantes/dashboard-stats')
 };
 
 // Servicios de Candidatos
@@ -119,13 +173,33 @@ export const candidatePositionService = {
   },
   createAssignment: (assignmentData) => api.post('/candidatos-posiciones', assignmentData),
   updateAssignment: (id, assignmentData) => api.put(`/candidatos-posiciones/${id}`, assignmentData),
-  deleteAssignment: (id) => api.delete(`/candidatos-posiciones/${id}`)
+  deleteAssignment: (id) => api.delete(`/candidatos-posiciones/${id}`),
+  
+  // Nuevos endpoints para el flujo real
+  getCandidatesByVacant: (vacanteId) => api.get(`/candidatos-posiciones/por-vacante/${vacanteId}`),
+  acceptBySupervisor: (assignmentId, data) => api.post(`/candidatos-posiciones/${assignmentId}/aceptar-supervisor`, data),
+  finalizeProcess: (assignmentId, data) => api.post(`/candidatos-posiciones/${assignmentId}/finalizar-proceso`, data),
+  getStatistics: () => api.get('/candidatos-posiciones/estadisticas')
 };
 
 // Servicios de Reportes
 export const reportService = {
   getDashboardStats: () => api.get('/reports/dashboard'),
   getVacantReport: (vacanteId) => api.get(`/reports/vacante/${vacanteId}/reporte`)
+};
+
+// Función helper para manejar errores comunes
+export const handleApiError = (error) => {
+  if (error.response) {
+    // Error del servidor
+    return error.response.data?.message || `Error ${error.response.status}: ${error.response.statusText}`;
+  } else if (error.request) {
+    // Error de red
+    return 'Error de conexión. Verifica tu conexión a internet.';
+  } else {
+    // Error de configuración
+    return 'Error inesperado. Inténtalo de nuevo.';
+  }
 };
 
 export default api;

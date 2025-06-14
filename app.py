@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from extensions import db, login_manager, jwt, migrate, cors
 from config import Config
 
@@ -39,6 +39,38 @@ def create_app(config_class=Config):
     app.register_blueprint(candidatos_posiciones_bp, url_prefix='/api/candidatos-posiciones')
     app.register_blueprint(reports_bp, url_prefix='/api/reports')
     
+    # Health check endpoint
+    @app.route('/api/health', methods=['GET'])
+    def health_check():
+        return jsonify({
+            'status': 'healthy',
+            'message': 'API funcionando correctamente',
+            'version': '1.0.0'
+        }), 200
+    
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({'message': 'Endpoint no encontrado'}), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return jsonify({'message': 'Error interno del servidor'}), 500
+    
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({'message': 'Petición inválida'}), 400
+    
+    # CORS para todas las rutas como fallback
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
+    
     return app
 
 if __name__ == '__main__':
@@ -47,4 +79,7 @@ if __name__ == '__main__':
         # Import models
         from models import Usuario, Vacante, Candidato, Documento, Entrevista, CandidatosPositions
         db.create_all()
-    app.run(debug=True)
+        print("🚀 Servidor iniciado en http://localhost:5000")
+        print("📋 API disponible en http://localhost:5000/api")
+        print("💊 Health check en http://localhost:5000/api/health")
+    app.run(debug=True, host='0.0.0.0', port=5000)

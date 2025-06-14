@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 
 // Componentes
 import Layout from './components/Layout';
+import ConnectionStatus from './components/ConnectionStatus';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Vacants from './pages/Vacants';
@@ -16,10 +17,34 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 // Componente para rutas protegidas
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, connectionStatus } = useAuth();
   
-  if (loading) {
+  if (loading || connectionStatus === 'checking') {
     return <LoadingSpinner />;
+  }
+  
+  // Si no hay conexión con el backend, mostrar mensaje de error
+  if (connectionStatus === 'error') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <h2 className="text-lg font-semibold mb-2">❌ Error de Conexión</h2>
+            <p className="mb-4">No se puede conectar con el servidor backend.</p>
+            <p className="text-sm">
+              Verifica que el servidor esté corriendo en{' '}
+              <code className="bg-red-200 px-1 rounded">http://localhost:5000</code>
+            </p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            🔄 Reintentar
+          </button>
+        </div>
+      </div>
+    );
   }
   
   return isAuthenticated ? children : <Navigate to="/login" replace />;
@@ -27,9 +52,9 @@ const ProtectedRoute = ({ children }) => {
 
 // Componente principal de rutas
 const AppRoutes = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, connectionStatus } = useAuth();
   
-  if (loading) {
+  if (loading || connectionStatus === 'checking') {
     return <LoadingSpinner />;
   }
   
@@ -37,7 +62,28 @@ const AppRoutes = () => {
     <Routes>
       <Route 
         path="/login" 
-        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
+        element={
+          connectionStatus === 'error' ? (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+              <div className="max-w-md mx-auto text-center">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  <h2 className="text-lg font-semibold mb-2">❌ Error de Conexión</h2>
+                  <p className="mb-4">No se puede conectar con el servidor backend.</p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  >
+                    🔄 Reintentar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Login />
+          )
+        } 
       />
       
       <Route 
@@ -122,6 +168,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <AppRoutes />
+          <ConnectionStatus />
           <Toaster 
             position="top-right"
             toastOptions={{
