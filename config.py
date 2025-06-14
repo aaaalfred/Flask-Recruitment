@@ -12,8 +12,19 @@ class Config:
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD') or 'password'
     MYSQL_DB = os.environ.get('MYSQL_DB') or 'recruitment_system'
     
-    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
+    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}?charset=utf8mb4&collation=utf8mb4_unicode_ci"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Engine options for UTF-8 support
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'connect_args': {
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            'autocommit': False
+        }
+    }
     
     # AWS S3 Configuration
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')

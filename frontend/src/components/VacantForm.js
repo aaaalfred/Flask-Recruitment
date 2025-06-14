@@ -23,11 +23,8 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
       entrevistas_op: 3,
       vacantes: 1,
       avance: 'Creada',
-      ubicacion: '',
-      modalidad: 'presencial',
       prioridad: 'media',
-      salario_min: '',
-      salario_max: '',
+      envio_candidatos_rh: '',
       fecha_limite: '',
       comentarios: ''
     }
@@ -38,7 +35,7 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
     if (vacant) {
       // Poblar formulario con datos existentes
       Object.keys(vacant).forEach(key => {
-        if (key === 'fecha_limite' && vacant[key]) {
+        if ((key === 'fecha_limite' || key === 'envio_candidatos_rh') && vacant[key]) {
           // Convertir fecha para input datetime-local
           const date = new Date(vacant[key]);
           setValue(key, date.toISOString().slice(0, 16));
@@ -63,18 +60,18 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
     try {
       setLoading(true);
       
-      // Convertir fecha límite si existe
+      // Convertir fechas si existen
       if (data.fecha_limite) {
         data.fecha_limite = new Date(data.fecha_limite).toISOString();
+      }
+      if (data.envio_candidatos_rh) {
+        data.envio_candidatos_rh = new Date(data.envio_candidatos_rh).toISOString();
       }
       
       // Convertir números
       data.candidatos_requeridos = parseInt(data.candidatos_requeridos);
       data.entrevistas_op = parseInt(data.entrevistas_op);
       data.vacantes = parseInt(data.vacantes);
-      
-      if (data.salario_min) data.salario_min = parseFloat(data.salario_min);
-      if (data.salario_max) data.salario_max = parseFloat(data.salario_max);
 
       let response;
       if (vacant) {
@@ -101,40 +98,28 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
   const reclutadoresLider = users.filter(user => user.rol === 'reclutador_lider');
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-6">
-        {vacant ? 'Editar Vacante' : 'Nueva Vacante'}
-      </h2>
+    <div className="bg-white rounded-lg p-6">
+      <div className="sticky top-0 bg-white z-10 pb-4 border-b border-gray-200 mb-6">
+        <h2 className="text-xl font-semibold">
+          {vacant ? 'Editar Vacante' : 'Nueva Vacante'}
+        </h2>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Información básica */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre de la Posición *
-            </label>
-            <input
-              type="text"
-              {...register('nombre', { required: 'El nombre es requerido' })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ej: 2210 ACC FELIX CUEVAS"
-            />
-            {errors.nombre && (
-              <p className="text-red-500 text-sm mt-1">{errors.nombre.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ubicación
-            </label>
-            <input
-              type="text"
-              {...register('ubicacion')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ej: Felix Cuevas, CDMX"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nombre de la Posición *
+          </label>
+          <input
+            type="text"
+            {...register('nombre', { required: 'El nombre es requerido' })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ej: 2210 ACC FELIX CUEVAS"
+          />
+          {errors.nombre && (
+            <p className="text-red-500 text-sm mt-1">{errors.nombre.message}</p>
+          )}
         </div>
 
         <div>
@@ -266,27 +251,13 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
           </div>
         </div>
 
-        {/* Detalles adicionales */}
+        {/* Fechas y prioridad */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
-            📋 Detalles Adicionales
+            📋 Fechas y Configuración
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Modalidad de Trabajo
-              </label>
-              <select
-                {...register('modalidad')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="presencial">Presencial</option>
-                <option value="remoto">Remoto</option>
-                <option value="hibrido">Híbrido</option>
-              </select>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Prioridad
@@ -304,39 +275,26 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Salario Mínimo
+                📥 Envío de Candidatos a RH
               </label>
               <input
-                type="number"
-                step="0.01"
-                {...register('salario_min')}
+                type="datetime-local"
+                {...register('envio_candidatos_rh')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
               />
+              <p className="text-xs text-gray-500 mt-1">Fecha cuando se envían candidatos</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Salario Máximo
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                {...register('salario_max')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha Límite
+                🗓️ Fecha Límite
               </label>
               <input
                 type="datetime-local"
                 {...register('fecha_limite')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <p className="text-xs text-gray-500 mt-1">Fecha límite del proceso</p>
             </div>
           </div>
 
@@ -354,22 +312,24 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
         </div>
 
         {/* Botones de acción */}
-        <div className="flex justify-end space-x-4 pt-6 border-t">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {loading ? 'Guardando...' : vacant ? 'Actualizar Vacante' : 'Crear Vacante'}
-          </button>
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-4 mt-8">
+          <div className="flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {loading ? 'Guardando...' : vacant ? 'Actualizar Vacante' : 'Crear Vacante'}
+            </button>
+          </div>
         </div>
       </form>
     </div>
