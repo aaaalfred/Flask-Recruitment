@@ -10,7 +10,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 segundos timeout
+  timeout: 30000, // 30 segundos timeout (era 10 segundos)
 });
 
 // Interceptor para agregar token automáticamente
@@ -184,7 +184,10 @@ export const candidatePositionService = {
 
 // Servicios de Reportes
 export const reportService = {
-  getDashboardStats: () => api.get('/reports/dashboard'),
+  getDashboardStats: () => {
+    // Timeout específico para dashboard (puede ser lento)
+    return api.get('/reports/dashboard', { timeout: 45000 }); // 45 segundos
+  },
   getVacantReport: (vacanteId) => api.get(`/reports/vacante/${vacanteId}/reporte`)
 };
 

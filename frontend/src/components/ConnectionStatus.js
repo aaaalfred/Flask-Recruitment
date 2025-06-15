@@ -28,8 +28,8 @@ const ConnectionStatus = () => {
   useEffect(() => {
     checkConnection();
     
-    // Verificar conexión cada 30 segundos
-    const interval = setInterval(checkConnection, 30000);
+    // Verificar conexión cada 5 minutos
+    const interval = setInterval(checkConnection, 300000);
     
     return () => clearInterval(interval);
   }, []);
@@ -69,6 +69,12 @@ const ConnectionStatus = () => {
 
   const statusInfo = getStatusInfo();
 
+  // Solo mostrar notificación cuando hay error o está verificando
+  // Ocultar cuando está conectado correctamente
+  if (status === 'connected') {
+    return null;
+  }
+
   return (
     <div className={`fixed bottom-4 right-4 p-3 rounded-lg shadow-lg ${statusInfo.bgColor} ${statusInfo.color} max-w-xs z-50`}>
       <div className="flex items-center space-x-2">
@@ -89,13 +95,6 @@ const ConnectionStatus = () => {
           Verificar
         </button>
       </div>
-      
-      {details && status === 'connected' && (
-        <div className="mt-2 text-xs">
-          <p>Servidor: {details.message}</p>
-          <p>Versión: {details.version}</p>
-        </div>
-      )}
       
       {details && status === 'error' && (
         <div className="mt-2 text-xs">
