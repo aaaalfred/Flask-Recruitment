@@ -106,9 +106,12 @@ export const userService = {
 
 // Servicios de Vacantes
 export const vacantService = {
-  getVacants: (page = 1, perPage = 10, estado = null) => {
+  getVacants: (page = 1, perPage = 10, estado = null, search = null, cliente = null, avance = null) => {
     let url = `/vacantes?page=${page}&per_page=${perPage}`;
     if (estado) url += `&estado=${estado}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (cliente) url += `&cliente=${encodeURIComponent(cliente)}`;
+    if (avance) url += `&avance=${encodeURIComponent(avance)}`;
     return api.get(url);
   },
   getVacant: (id) => api.get(`/vacantes/${id}`),
@@ -180,6 +183,27 @@ export const candidatePositionService = {
   acceptBySupervisor: (assignmentId, data) => api.post(`/candidatos-posiciones/${assignmentId}/aceptar-supervisor`, data),
   finalizeProcess: (assignmentId, data) => api.post(`/candidatos-posiciones/${assignmentId}/finalizar-proceso`, data),
   getStatistics: () => api.get('/candidatos-posiciones/estadisticas')
+};
+
+// Servicios de Clientes ⭐ NUEVO
+export const clientService = {
+  getClients: (page = 1, perPage = 10, search = null) => {
+    let url = `/clientes?page=${page}&per_page=${perPage}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    return api.get(url);
+  },
+  getClient: (id) => api.get(`/clientes/${id}`),
+  createClient: (clientData) => api.post('/clientes', clientData),
+  updateClient: (id, clientData) => api.put(`/clientes/${id}`, clientData),
+  deleteClient: (id) => api.delete(`/clientes/${id}`),
+  getActiveClients: () => api.get('/clientes/active'),
+  searchClients: (query) => api.get(`/clientes/search?q=${encodeURIComponent(query)}`),
+  validateCCP: (ccp, excludeId = null) => {
+    let url = '/clientes/validate-ccp';
+    const params = new URLSearchParams({ ccp });
+    if (excludeId) params.append('exclude_id', excludeId);
+    return api.post(url, { ccp, exclude_id: excludeId });
+  }
 };
 
 // Servicios de Reportes

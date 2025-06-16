@@ -13,6 +13,8 @@ def get_vacantes(current_user):
         per_page = request.args.get('per_page', 10, type=int)
         estado = request.args.get('estado')
         avance = request.args.get('avance')
+        search = request.args.get('search')  # ⭐ NUEVO - Búsqueda por nombre
+        cliente = request.args.get('cliente')  # ⭐ NUEVO - Búsqueda por cliente/CCP
         
         query = Vacante.query
         
@@ -23,6 +25,20 @@ def get_vacantes(current_user):
         # Filtrar por avance si se proporciona
         if avance:
             query = query.filter_by(avance=avance)
+        
+        # ⭐ NUEVO - Filtrar por búsqueda en nombre de vacante
+        if search:
+            query = query.filter(Vacante.nombre.contains(search))
+        
+        # ⭐ NUEVO - Filtrar por cliente o CCP
+        if cliente:
+            from models import Cliente
+            query = query.join(Cliente).filter(
+                db.or_(
+                    Cliente.nombre.contains(cliente),
+                    Cliente.ccp.contains(cliente)
+                )
+            )
         
         # Filtrar según rol del usuario
         if current_user.rol == 'reclutador':

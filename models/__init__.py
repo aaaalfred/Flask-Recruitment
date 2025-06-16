@@ -3,6 +3,31 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# Modelo Cliente ⭐ NUEVO
+class Cliente(db.Model):
+    __tablename__ = 'cliente'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200), nullable=False)
+    ccp = db.Column(db.String(50), unique=True, nullable=False)  # Clave-Cliente-Proyecto única
+    activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    vacantes = db.relationship('Vacante', back_populates='cliente', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'ccp': self.ccp,
+            'activo': self.activo,
+            'fecha_creacion': self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            'fecha_actualizacion': self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
+            'total_vacantes': len(self.vacantes) if self.vacantes else 0
+        }
+
 # Tabla intermedia para relación muchos a muchos - ACTUALIZADA CON CAMPOS REALES
 class CandidatosPositions(db.Model):
     __tablename__ = 'candidatos_posiciones'
@@ -71,7 +96,7 @@ class Usuario(UserMixin, db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    rol = db.Column(db.Enum('ejecutivo', 'reclutador', 'reclutador_lider'), nullable=False)
+    rol = db.Column(db.Enum('ejecutivo', 'reclutador', 'reclutador_lider', 'administrador'), nullable=False)
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -113,6 +138,9 @@ class Vacante(db.Model):
     reclutador_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
     reclutador_lider_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
     
+    # ⭐ NUEVO - Relación con cliente
+    cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=True)
+    
     # Campos específicos del proceso de reclutamiento
     vacantes = db.Column(db.Integer, default=1)  # Número de posiciones
     candidatos_requeridos = db.Column(db.Integer, default=3)  # Candidatos que se necesitan presentar
@@ -149,6 +177,7 @@ class Vacante(db.Model):
     ejecutivo = db.relationship('Usuario', foreign_keys=[ejecutivo_id], back_populates='vacantes_ejecutivo')
     reclutador = db.relationship('Usuario', foreign_keys=[reclutador_id], back_populates='vacantes_reclutador')
     reclutador_lider = db.relationship('Usuario', foreign_keys=[reclutador_lider_id], back_populates='vacantes_lider')
+    cliente = db.relationship('Cliente', back_populates='vacantes')  # ⭐ NUEVO
     entrevistas = db.relationship('Entrevista', back_populates='vacante_rel', cascade='all, delete-orphan')
     candidatos_posiciones = db.relationship('CandidatosPositions', back_populates='vacante', cascade='all, delete-orphan')
     
@@ -213,6 +242,11 @@ class Vacante(db.Model):
             'fecha_cierre': self.fecha_cierre.isoformat() if self.fecha_cierre else None,
             'resumen_ia': self.resumen_ia,
             'informacion_clave_ia': self.informacion_clave_ia,
+            
+            # ⭐ NUEVO - Información del cliente
+            'cliente_id': self.cliente_id,
+            'cliente_nombre': self.cliente.nombre if self.cliente else None,
+            'cliente_ccp': self.cliente.ccp if self.cliente else None,
             
             # Contadores dinámicos basados en el estado real
             'total_candidatos': len(self.candidatos_posiciones),

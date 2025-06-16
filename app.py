@@ -18,7 +18,7 @@ def create_app(config_class=Config):
     login_manager.login_message = 'Por favor inicia sesión para acceder a esta página.'
     
     # Import models for migrations
-    from models import Usuario, Vacante, Candidato, Documento, Entrevista, CandidatosPositions
+    from models import Usuario, Vacante, Candidato, Documento, Entrevista, CandidatosPositions, Cliente
     
     # Register blueprints
     from routes.auth_routes import auth_bp
@@ -29,6 +29,7 @@ def create_app(config_class=Config):
     from routes.entrevista_routes import entrevista_bp
     from routes.candidatos_posiciones_routes import candidatos_posiciones_bp
     from routes.reports_routes import reports_bp
+    from routes.cliente_routes import cliente_bp  # ⭐ NUEVO
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(usuario_bp, url_prefix='/api/usuarios')
@@ -38,6 +39,7 @@ def create_app(config_class=Config):
     app.register_blueprint(entrevista_bp, url_prefix='/api/entrevistas')
     app.register_blueprint(candidatos_posiciones_bp, url_prefix='/api/candidatos-posiciones')
     app.register_blueprint(reports_bp, url_prefix='/api/reports')
+    app.register_blueprint(cliente_bp, url_prefix='/api/clientes')  # ⭐ NUEVO
     
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])
@@ -72,7 +74,7 @@ if __name__ == '__main__':
     app = create_app()
     with app.app_context():
         # Import models
-        from models import Usuario, Vacante, Candidato, Documento, Entrevista, CandidatosPositions
+        from models import Usuario, Vacante, Candidato, Documento, Entrevista, CandidatosPositions, Cliente
         db.create_all()
         print("🚀 Servidor iniciado en http://localhost:5000")
         print("📋 API disponible en http://localhost:5000/api")
