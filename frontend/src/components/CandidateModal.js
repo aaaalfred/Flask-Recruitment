@@ -4,9 +4,11 @@ import {
   UserIcon,
   PhoneIcon,
   DocumentTextIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  BriefcaseIcon,
+  BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
-import { candidateService } from '../services/api';
+import { candidateService, vacantService, candidatePositionService } from '../services/api';
 import { LABELS } from '../utils/constants';
 import toast from 'react-hot-toast';
 
@@ -14,35 +16,61 @@ const CandidateModal = ({ isOpen, onClose, candidate = null, onSave }) => {
   const isEditing = Boolean(candidate);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingVacants, setLoadingVacants] = useState(false);
   
   const [formData, setFormData] = useState({
     nombre: '',
     telefono: '',
     comentarios_finales: '',
-    estado: 'activo'
+    estado: 'activo',
+    vacante_id: '' // ⭐ NUEVO - ID de la vacante seleccionada
   });
 
   const [errors, setErrors] = useState({});
+  const [activeVacants, setActiveVacants] = useState([]); // ⭐ NUEVO - Lista de vacantes activas
+
+  // Cargar vacantes activas cuando se abre el modal
+  const loadActiveVacants = async () => {
+    try {
+      setLoadingVacants(true);
+      const response = await vacantService.getVacants(1, 100, 'abierta'); // Solo vacantes abiertas
+      setActiveVacants(response.data.vacantes || []);
+    } catch (error) {
+      console.error('Error loading vacants:', error);
+      toast.error('Error cargando vacantes activas');
+      setActiveVacants([]);
+    } finally {
+      setLoadingVacants(false);
+    }
+  };
 
   // Resetear formulario cuando se abre/cierra el modal
   useEffect(() => {
     if (isOpen) {
+      // Cargar vacantes activas
+      loadActiveVacants();
+      
       if (candidate) {
         setFormData({
           nombre: candidate.nombre || '',
           telefono: candidate.telefono || '',
           comentarios_finales: candidate.comentarios_finales || candidate.comentarios_generales || '',
-          estado: candidate.estado || 'activo'
+          estado: candidate.estado || 'activo',
+          vacante_id: '' // Para edición, no preseleccionamos vacante
         });
       } else {
         setFormData({
           nombre: '',
           telefono: '',
           comentarios_finales: '',
-          estado: 'activo'
+          estado: 'activo',
+          vacante_id: ''
         });
       }
       setErrors({});
+    } else {
+      // Limpiar vacantes cuando se cierre el modal
+      setActiveVacants([]);
     }
   }, [isOpen, candidate]);
 
@@ -78,14 +106,38 @@ const CandidateModal = ({ isOpen, onClose, candidate = null, onSave }) => {
       if (!dataToSend.comentarios_finales.trim()) {
         delete dataToSend.comentarios_finales;
       }
+      
+      // Remover vacante_id del payload del candidato
+      const vacanteSeleccionada = dataToSend.vacante_id;
+      delete dataToSend.vacante_id;
 
       let response;
       if (isEditing) {
         response = await candidateService.updateCandidate(candidate.id, dataToSend);
         toast.success('Candidato actualizado exitosamente');
       } else {
+        // Crear candidato
         response = await candidateService.createCandidate(dataToSend);
-        toast.success('Candidato creado exitosamente');
+        const candidatoCreado = response.data.candidato || response.data;
+        
+        // Si se seleccionó una vacante, asignar el candidato automáticamente
+        if (vacanteSeleccionada) {
+          try {
+            await candidatePositionService.createAssignment({
+              candidato_id: candidatoCreado.id,
+              vacante_id: vacanteSeleccionada,
+              status: 'postulado'
+            });
+            
+            const vacanteInfo = activeVacants.find(v => v.id == vacanteSeleccionada);
+            toast.success(`Candidato creado y asignado a "${vacanteInfo?.nombre}" exitosamente`);
+          } catch (assignError) {
+            console.error('Error asignando a vacante:', assignError);
+            toast.warning('Candidato creado, pero no se pudo asignar a la vacante');
+          }
+        } else {
+          toast.success('Candidato creado exitosamente');
+        }
       }
       
       if (onSave) {
@@ -202,6 +254,62 @@ const CandidateModal = ({ isOpen, onClose, candidate = null, onSave }) => {
                 <p className="text-sm text-red-600 mt-1">{errors.telefono}</p>
               )}
             </div>
+
+            {/* Vacante a aplicar (solo para creación) */}
+            {!isEditing && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  🎯 Vacante a Aplicar (Opcional)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <BriefcaseIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    value={formData.vacante_id}
+                    onChange={(e) => handleInputChange('vacante_id', e.target.value)}
+                    disabled={saving || loadingVacants}
+                  >
+                    <option value="">-- Sin asignar a vacante --</option>
+                    {loadingVacants ? (
+                      <option disabled>Cargando vacantes...</option>
+                    ) : (
+                      activeVacants.map((vacant) => (
+                        <option key={vacant.id} value={vacant.id}>
+                          {vacant.nombre}
+                          {vacant.cliente_nombre && ` - ${vacant.cliente_nombre}`}
+                          {vacant.cliente_ccp && ` (${vacant.cliente_ccp})`}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Si seleccionas una vacante, el candidato será asignado automáticamente
+                </p>
+                {formData.vacante_id && (
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-start space-x-2">
+                      <BuildingOfficeIcon className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-900">
+                          {activeVacants.find(v => v.id == formData.vacante_id)?.nombre}
+                        </p>
+                        {activeVacants.find(v => v.id == formData.vacante_id)?.cliente_nombre && (
+                          <p className="text-xs text-blue-700">
+                            Cliente: {activeVacants.find(v => v.id == formData.vacante_id)?.cliente_nombre}
+                            {activeVacants.find(v => v.id == formData.vacante_id)?.cliente_ccp && 
+                              ` (${activeVacants.find(v => v.id == formData.vacante_id)?.cliente_ccp})`
+                            }
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Estado (solo para edición) */}
             {isEditing && (

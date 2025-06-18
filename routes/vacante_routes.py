@@ -43,6 +43,8 @@ def get_vacantes(current_user):
         # Filtrar según rol del usuario
         if current_user.rol == 'reclutador':
             query = query.filter_by(reclutador_id=current_user.id)
+        elif current_user.rol == 'ejecutivo':
+            query = query.filter_by(ejecutivo_id=current_user.id)
         
         # Actualizar días transcurridos para todas las vacantes
         for vacante in query.all():
@@ -72,6 +74,9 @@ def get_vacante(current_user, vacante_id):
         # Verificar permisos
         if (current_user.rol == 'reclutador' and 
             vacante.reclutador_id != current_user.id):
+            return jsonify({'message': 'Sin permisos para ver esta vacante'}), 403
+        elif (current_user.rol == 'ejecutivo' and 
+              vacante.ejecutivo_id != current_user.id):
             return jsonify({'message': 'Sin permisos para ver esta vacante'}), 403
         
         # Actualizar días transcurridos
@@ -191,8 +196,13 @@ def update_vacante(current_user, vacante_id):
         vacante = Vacante.query.get_or_404(vacante_id)
         
         # Verificar permisos
-        if (current_user.rol not in ['ejecutivo', 'reclutador_lider'] and 
+        if (current_user.rol == 'reclutador' and 
             vacante.reclutador_id != current_user.id):
+            return jsonify({'message': 'Sin permisos para modificar esta vacante'}), 403
+        elif (current_user.rol == 'ejecutivo' and 
+              vacante.ejecutivo_id != current_user.id):
+            return jsonify({'message': 'Sin permisos para modificar esta vacante'}), 403
+        elif current_user.rol not in ['ejecutivo', 'reclutador', 'reclutador_lider', 'administrador']:
             return jsonify({'message': 'Sin permisos para modificar esta vacante'}), 403
         
         data = request.get_json()
@@ -402,6 +412,8 @@ def get_dashboard_stats(current_user):
         query = Vacante.query
         if current_user.rol == 'reclutador':
             query = query.filter_by(reclutador_id=current_user.id)
+        elif current_user.rol == 'ejecutivo':
+            query = query.filter_by(ejecutivo_id=current_user.id)
         
         vacantes = query.all()
         
