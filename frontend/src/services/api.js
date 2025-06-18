@@ -206,13 +206,24 @@ export const clientService = {
   }
 };
 
-// Servicios de Reportes
+// Servicios de Reportes ⭐ MEJORADO
 export const reportService = {
   getDashboardStats: () => {
     // Timeout específico para dashboard (puede ser lento)
     return api.get('/reports/dashboard', { timeout: 45000 }); // 45 segundos
   },
-  getVacantReport: (vacanteId) => api.get(`/reports/vacante/${vacanteId}/reporte`)
+  getVacantReport: (vacanteId) => api.get(`/reports/vacante/${vacanteId}/reporte`),
+  
+  // ⭐ NUEVOS ENDPOINTS
+  getKPIs: () => {
+    return api.get('/reports/dashboard/kpis', { timeout: 30000 });
+  },
+  getAlertas: () => {
+    return api.get('/reports/dashboard/alertas', { timeout: 20000 });
+  },
+  getUserStats: () => {
+    return api.get('/reports/usuarios/estadisticas', { timeout: 20000 });
+  }
 };
 
 // Función helper para manejar errores comunes

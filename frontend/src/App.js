@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';  // ⭐ NUEVO
 import Vacants from './pages/Vacants';
 import Candidates from './pages/Candidates';
+import CandidateForm from './pages/CandidateForm';
 import Interviews from './pages/Interviews';
 import Users from './pages/Users';
 import Reports from './pages/Reports';
@@ -126,11 +127,33 @@ const AppRoutes = () => {
       />
       
       <Route 
-        path="/candidates/*" 
+        path="/candidates" 
         element={
           <ProtectedRoute>
             <Layout>
               <Candidates />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/candidates/new" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CandidateForm />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/candidates/:id/edit" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CandidateForm />
             </Layout>
           </ProtectedRoute>
         } 

@@ -19,12 +19,12 @@ def get_candidatos(current_user):
         if estado:
             query = query.filter_by(estado=estado)
         
-        # Búsqueda por nombre o email
+        # Búsqueda por nombre o email (considerando que email puede ser None)
         if search:
-            query = query.filter(
-                (Candidato.nombre.contains(search)) |
-                (Candidato.email.contains(search))
-            )
+            search_filter = Candidato.nombre.contains(search)
+            if search.count('@') > 0:  # Si parece un email
+                search_filter = search_filter | (Candidato.email.contains(search))
+            query = query.filter(search_filter)
         
         # Filtrar según rol del usuario
         if current_user.rol == 'reclutador':
@@ -77,32 +77,27 @@ def get_candidato(current_user, candidato_id):
         return jsonify({'message': f'Error obteniendo candidato: {str(e)}'}), 500
 
 @candidato_bp.route('', methods=['POST'])
-@role_required('reclutador', 'reclutador_lider')
+@role_required('reclutador', 'reclutador_lider', 'administrador')
 def create_candidato(current_user):
     try:
         data = request.get_json()
         
-        required_fields = ['nombre', 'email']
-        for field in required_fields:
-            if not data.get(field):
-                return jsonify({'message': f'{field} es requerido'}), 400
+        # Solo el nombre es requerido
+        if not data.get('nombre'):
+            return jsonify({'message': 'El nombre es requerido'}), 400
         
-        # Verificar email único
-        if Candidato.query.filter_by(email=data['email']).first():
+        # Verificar email único solo si se proporciona
+        email = data.get('email')
+        if email and Candidato.query.filter_by(email=email).first():
             return jsonify({'message': 'El email ya existe'}), 400
         
         nuevo_candidato = Candidato(
             nombre=data['nombre'],
-            email=data['email'],
+            email=email,  # Puede ser None
             telefono=data.get('telefono'),
             reclutador_id=current_user.id,
-            salario_esperado=data.get('salario_esperado'),
-            experiencia_anos=data.get('experiencia_anos'),
-            ubicacion=data.get('ubicacion'),
-            disponibilidad=data.get('disponibilidad'),
-            nivel_ingles=data.get('nivel_ingles'),
-            linkedin_url=data.get('linkedin_url'),
-            comentarios_finales=data.get('comentarios_finales')
+            # Campos simplificados - solo comentarios
+            comentarios_generales=data.get('comentarios_finales')  # Usar comentarios_generales
         )
         
         db.session.add(nuevo_candidato)
@@ -130,22 +125,24 @@ def update_candidato(current_user, candidato_id):
         
         data = request.get_json()
         
-        # Campos actualizables
+        # Campos actualizables simplificados
         campos_actualizables = [
-            'nombre', 'email', 'telefono', 'estado', 'comentarios_finales',
-            'salario_esperado', 'experiencia_anos', 'ubicacion', 'disponibilidad',
-            'nivel_ingles', 'linkedin_url'
+            'nombre', 'telefono', 'estado', 'comentarios_generales'
         ]
         
         for campo in campos_actualizables:
-            if campo in data:
+            # Mapear comentarios_finales a comentarios_generales
+            campo_real = 'comentarios_generales' if campo == 'comentarios_finales' else campo
+            campo_data = 'comentarios_finales' if campo == 'comentarios_generales' else campo
+            
+            if campo_data in data:
                 # Verificar email único si se está actualizando
-                if campo == 'email':
-                    existing = Candidato.query.filter_by(email=data[campo]).first()
+                if campo == 'email' and data[campo_data]:
+                    existing = Candidato.query.filter_by(email=data[campo_data]).first()
                     if existing and existing.id != candidato_id:
                         return jsonify({'message': 'El email ya está en uso'}), 400
                 
-                setattr(candidato, campo, data[campo])
+                setattr(candidato, campo_real, data[campo_data])
         
         db.session.commit()
         
@@ -159,7 +156,7 @@ def update_candidato(current_user, candidato_id):
         return jsonify({'message': f'Error actualizando candidato: {str(e)}'}), 500
 
 @candidato_bp.route('/<int:candidato_id>', methods=['DELETE'])
-@role_required('reclutador_lider')
+@role_required('reclutador_lider', 'administrador')
 def delete_candidato(current_user, candidato_id):
     try:
         candidato = Candidato.query.get_or_404(candidato_id)
