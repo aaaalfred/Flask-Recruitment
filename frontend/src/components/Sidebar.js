@@ -20,12 +20,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, currentPath, isCollapsed, setIsC
   const { user } = useAuth();
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['ejecutivo', 'reclutador', 'reclutador_lider'] },
-    { name: 'Vacantes', href: '/vacants', icon: BriefcaseIcon, roles: ['ejecutivo', 'reclutador', 'reclutador_lider'] },
-    { name: 'Candidatos', href: '/candidates', icon: UserGroupIcon, roles: ['ejecutivo', 'reclutador', 'reclutador_lider'] },
-    { name: 'Entrevistas', href: '/interviews', icon: CalendarDaysIcon, roles: ['ejecutivo', 'reclutador', 'reclutador_lider'] },
-    { name: 'Usuarios', href: '/users', icon: UsersIcon, roles: ['ejecutivo', 'reclutador_lider'] },
-    { name: 'Reportes', href: '/reports', icon: ChartBarIcon, roles: ['ejecutivo', 'reclutador_lider'] },
+    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: ['ejecutivo', 'reclutador', 'reclutador_lider', 'administrador'] },
+    { name: 'Clientes', href: '/clients', icon: BuildingOfficeIcon, roles: ['ejecutivo', 'administrador'] },
+    { name: 'Vacantes', href: '/vacants', icon: BriefcaseIcon, roles: ['ejecutivo', 'reclutador', 'reclutador_lider', 'administrador'] },
+    { name: 'Candidatos', href: '/candidates', icon: UserGroupIcon, roles: ['reclutador', 'reclutador_lider', 'administrador'] },
+    { name: 'Entrevistas', href: '/interviews', icon: CalendarDaysIcon, roles: ['ejecutivo', 'reclutador', 'reclutador_lider', 'administrador'] },
+    { name: 'Usuarios', href: '/users', icon: UsersIcon, roles: ['reclutador_lider', 'administrador'] },
+    { name: 'Reportes', href: '/reports', icon: ChartBarIcon, roles: ['ejecutivo', 'reclutador_lider', 'administrador'] },
   ];
 
   const filteredNavigation = navigation.filter(item => 

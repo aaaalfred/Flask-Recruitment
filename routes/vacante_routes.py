@@ -135,12 +135,21 @@ def create_vacante(current_user):
         if not reclutador_lider_id and current_user.rol == 'reclutador_lider':
             reclutador_lider_id = current_user.id
         
+        # ⭐ NUEVO - Validar cliente si se proporciona
+        cliente_id = data.get('cliente_id')
+        if cliente_id:
+            from models import Cliente
+            cliente = Cliente.query.get(cliente_id)
+            if not cliente or not cliente.activo:
+                return jsonify({'message': 'Cliente inválido o inactivo'}), 400
+        
         nueva_vacante = Vacante(
             nombre=data['nombre'],
             descripcion=data.get('descripcion'),
             ejecutivo_id=current_user.id,
             reclutador_id=data['reclutador_id'],
             reclutador_lider_id=reclutador_lider_id,
+            cliente_id=cliente_id,  # ⭐ NUEVO
             
             # Campos específicos del proceso de reclutamiento
             vacantes=data.get('vacantes', 1),
@@ -187,6 +196,16 @@ def update_vacante(current_user, vacante_id):
             return jsonify({'message': 'Sin permisos para modificar esta vacante'}), 403
         
         data = request.get_json()
+        
+        # ⭐ NUEVO - Validar cliente si se está actualizando
+        if 'cliente_id' in data:
+            cliente_id = data['cliente_id']
+            if cliente_id:
+                from models import Cliente
+                cliente = Cliente.query.get(cliente_id)
+                if not cliente or not cliente.activo:
+                    return jsonify({'message': 'Cliente inválido o inactivo'}), 400
+            vacante.cliente_id = cliente_id
         
         # Actualizar campos permitidos del proceso de reclutamiento
         campos_proceso = [

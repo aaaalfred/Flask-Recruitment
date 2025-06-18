@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import ConnectionStatus from './components/ConnectionStatus';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Clients from './pages/Clients';  // ⭐ NUEVO
 import Vacants from './pages/Vacants';
 import Candidates from './pages/Candidates';
 import Interviews from './pages/Interviews';
@@ -97,6 +98,17 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Layout>
               <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/clients/*" 
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Clients />
             </Layout>
           </ProtectedRoute>
         } 

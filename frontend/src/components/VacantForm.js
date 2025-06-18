@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { userService, vacantService } from '../services/api';
 import toast from 'react-hot-toast';
+import ClientSelector from './ClientSelector';
 
 const VacantForm = ({ vacant = null, onSave, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [selectedClient, setSelectedClient] = useState(null);
   
   const {
     register,
@@ -18,6 +20,7 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
     defaultValues: {
       nombre: '',
       descripcion: '',
+      cliente_id: '',
       reclutador_id: '',
       reclutador_lider_id: '', // Se configurará automáticamente
       candidatos_requeridos: 3,
@@ -44,6 +47,16 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
           setValue(key, vacant[key]);
         }
       });
+      
+      // Establecer el cliente seleccionado si existe
+      if (vacant.cliente_id) {
+        setSelectedClient({
+          id: vacant.cliente_id,
+          nombre: vacant.cliente_nombre,
+          ccp: vacant.cliente_ccp
+        });
+        setValue('cliente_id', vacant.cliente_id);
+      }
     } else {
       // Para nuevas vacantes, configurar valores por defecto
       setValue('avance', 'Creada');
@@ -135,6 +148,13 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
     try {
       setLoading(true);
       
+      // Validar que se haya seleccionado un cliente
+      if (!selectedClient) {
+        toast.error('Debes seleccionar un cliente');
+        setLoading(false);
+        return;
+      }
+      
       // Convertir fechas si existen
       if (data.fecha_limite) {
         data.fecha_limite = new Date(data.fecha_limite).toISOString();
@@ -147,6 +167,11 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
       data.candidatos_requeridos = parseInt(data.candidatos_requeridos);
       data.entrevistas_op = parseInt(data.entrevistas_op);
       data.vacantes = parseInt(data.vacantes);
+      
+      // Asegurar que el cliente_id esté incluido
+      if (selectedClient) {
+        data.cliente_id = selectedClient.id;
+      }
 
       let response;
       if (vacant) {
@@ -172,6 +197,11 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
   
   const reclutadoresLider = users.filter(user => user.rol === 'reclutador_lider');
 
+  const handleClientSelect = (client) => {
+    setSelectedClient(client);
+    setValue('cliente_id', client?.id || '');
+  };
+
   return (
     <div className="bg-white rounded-lg p-6">
       <div className="sticky top-0 bg-white z-10 pb-4 border-b border-gray-200 mb-6">
@@ -181,6 +211,31 @@ const VacantForm = ({ vacant = null, onSave, onCancel }) => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Cliente */}
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <h3 className="text-lg font-medium text-purple-900 mb-4">
+            🏢 Información del Cliente
+          </h3>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cliente y CCP *
+            </label>
+            <ClientSelector
+              selectedClient={selectedClient}
+              onClientSelect={handleClientSelect}
+              placeholder="Seleccionar cliente y CCP..."
+              required={true}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Selecciona el cliente y su Clave-Cliente-Proyecto (CCP) asociada
+            </p>
+            {!selectedClient && (
+              <p className="text-red-500 text-sm mt-1">Debes seleccionar un cliente</p>
+            )}
+          </div>
+        </div>
+
         {/* Información básica */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
